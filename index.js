@@ -1,12 +1,25 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
 const app = express();
 const port = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+const pool = new Pool({
+	connectionString: process.env.DATABASE_URL,
+	ssl: {
+		rejectUnauthorized: false
+	}
+});
 
-app.get('/', (req, res) => {
-	res.send('Hello World!');
+app.get('/'. async (req, res) => {
+	try {
+		const client = await pool.connect();
+		const result = await client.query('SELECT NOW()');
+		res.send(result.rows[0]);
+		client.release();
+	} 	catch (err) {
+		console.error(err);
+		res.send("Error " + err);
+	}
 });
 
 app.listen(port, () => {
